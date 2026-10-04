@@ -60,12 +60,14 @@ This experiment proves that the local/open-source Sign in with ChatGPT approach 
 
 ## Adapter test evidence — 2026-10-04
 
-Continued inside Lima using Python 3.12.3 and pytest 9.1.1. Anton added the prompt and timeout assertions to the fake transport; Codex added the initial happy-path test and the two exception tests.
+Continued inside Lima using Python 3.12.3 and pytest 9.1.1. Anton added the prompt and timeout assertions to the fake transport; Codex added the initial happy-path test and the two exception tests. Anton then changed the timeout fake to raise Python's `TimeoutError`, observed one failing test, and added `try/except` to convert it into `ModelTimeoutError`. The tests passed after this change. Codex then completed generic-error conversion and added checks for the original exception cause and preservation of existing model errors.
 
 Verified behavior:
 
 - `complete()` returns the transport response and forwards the prompt and explicit timeout unchanged.
-- `ModelTimeoutError` and `ModelError` from the transport reach the caller with their messages intact.
+- A transport `TimeoutError` is converted into `ModelTimeoutError`, preserving its message and original cause.
+- A transport `RuntimeError` is converted into `ModelError`, preserving its message and original cause.
+- Existing `ModelError` and `ModelTimeoutError` instances pass through unchanged.
 
 Run from the repository root:
 
@@ -73,13 +75,13 @@ Run from the repository root:
 PYTHONPATH=src .venv/bin/python -m pytest -q
 ```
 
-Result: **3 passed in 0.00s**. These tests use synthetic strings and fake transports, with no credentials, network requests, or sleeps. The earlier macOS model experiment was not rerun.
+Result: **5 passed in 0.00s**. These tests use synthetic strings and fake transports, with no credentials, network requests, or sleeps. The earlier macOS model experiment was not rerun.
 
-The adapter passes the timeout to its transport; it does not enforce a deadline or translate provider-specific exceptions. These tests verify forwarding and error propagation, not real network timeout behavior.
+The adapter passes the timeout to its transport; it does not enforce a deadline. The timeout-conversion test uses Python's built-in `TimeoutError`. A real provider's timeout classification and enforcement remain unverified.
 
 ## Next step
 
-The broader T1.1 Yandex task in issue #1 remains outstanding and should stay open. A real provider transport and verification of its timeout behavior remain outside this completed adapter-test step.
+The broader T1.1 Yandex task in issue #1 remains outstanding and should stay open. A real provider transport and verification of its timeout behavior remain outstanding.
 
 Sign in with ChatGPT should remain a serious provider/authentication option, but I should not force the whole architecture around it before comparing the complexity with conventional model APIs.
 
