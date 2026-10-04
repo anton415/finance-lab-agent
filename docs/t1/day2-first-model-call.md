@@ -60,11 +60,12 @@ This experiment proves that the local/open-source Sign in with ChatGPT approach 
 
 ## Adapter test evidence — 2026-10-04
 
-Continued inside Lima using Python 3.12.3 and pytest 9.1.1. Anton added the prompt and timeout assertions to the fake transport; Codex added the initial happy-path test and the two exception tests. Anton then changed the timeout fake to raise Python's `TimeoutError`, observed one failing test, and added `try/except` to convert it into `ModelTimeoutError`. The tests passed after this change. Codex then completed generic-error conversion and added checks for the original exception cause and preservation of existing model errors.
+Continued inside Lima using Python 3.12.3 and pytest 9.1.1. Anton added the prompt and timeout assertions to the fake transport; Codex added the initial happy-path test and the two exception tests. Anton then changed the timeout fake to raise Python's `TimeoutError`, observed one failing test, and added `try/except` to convert it into `ModelTimeoutError`. The tests passed after this change. Codex completed generic-error conversion and input validation, with tests for original exception causes, preservation of existing model errors, and rejection of invalid inputs before the transport is called.
 
 Verified behavior:
 
-- `complete()` returns the transport response and forwards the prompt and explicit timeout unchanged.
+- `complete()` returns the transport response and forwards the valid prompt and explicit timeout unchanged.
+- Blank prompts and zero, negative, infinite, or NaN timeout values raise `ValueError` before the transport is called.
 - A transport `TimeoutError` is converted into `ModelTimeoutError`, preserving its message and original cause.
 - A transport `RuntimeError` is converted into `ModelError`, preserving its message and original cause.
 - Existing `ModelError` and `ModelTimeoutError` instances pass through unchanged.
@@ -75,7 +76,7 @@ Run from the repository root:
 PYTHONPATH=src .venv/bin/python -m pytest -q
 ```
 
-Result: **5 passed in 0.00s**. These tests use synthetic strings and fake transports, with no credentials, network requests, or sleeps. The earlier macOS model experiment was not rerun.
+Result: **12 passed in 0.01s**. These tests use synthetic strings and fake transports, with no credentials, network requests, or sleeps. The earlier macOS model experiment was not rerun.
 
 The adapter passes the timeout to its transport; it does not enforce a deadline. The timeout-conversion test uses Python's built-in `TimeoutError`. A real provider's timeout classification and enforcement remain unverified.
 

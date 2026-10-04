@@ -57,3 +57,25 @@ def test_complete_preserves_existing_model_error(error):
         adapter.complete("test prompt", 5.0)
 
     assert caught.value is error
+
+
+@pytest.mark.parametrize("prompt", ["", "   "])
+def test_complete_rejects_blank_prompt_before_calling_transport(prompt):
+    def unexpected_transport(prompt, timeout_seconds):
+        pytest.fail("transport must not be called for a blank prompt")
+
+    adapter = ModelAdapter(unexpected_transport)
+
+    with pytest.raises(ValueError, match="prompt must not be empty"):
+        adapter.complete(prompt, 5.0)
+
+
+@pytest.mark.parametrize("timeout_seconds", [0.0, -1.0, float("inf"), float("-inf"), float("nan")])
+def test_complete_rejects_invalid_timeout_before_calling_transport(timeout_seconds):
+    def unexpected_transport(prompt, timeout_seconds):
+        pytest.fail("transport must not be called for an invalid timeout")
+
+    adapter = ModelAdapter(unexpected_transport)
+
+    with pytest.raises(ValueError, match="timeout_seconds must be positive and finite"):
+        adapter.complete("test prompt", timeout_seconds)
