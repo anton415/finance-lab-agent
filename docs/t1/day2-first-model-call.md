@@ -58,9 +58,28 @@ Lima currently contains the Python development environment for `finance-lab-agen
 
 This experiment proves that the local/open-source Sign in with ChatGPT approach works for my account. It does not yet prove that this will be the final authentication architecture for a remotely hosted cloud service.
 
+## Adapter test evidence — 2026-10-04
+
+Continued inside Lima using Python 3.12.3 and pytest 9.1.1. Anton added the prompt and timeout assertions to the fake transport; Codex added the initial happy-path test and the two exception tests.
+
+Verified behavior:
+
+- `complete()` returns the transport response and forwards the prompt and explicit timeout unchanged.
+- `ModelTimeoutError` and `ModelError` from the transport reach the caller with their messages intact.
+
+Run from the repository root:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m pytest -q
+```
+
+Result: **3 passed in 0.00s**. These tests use synthetic strings and fake transports, with no credentials, network requests, or sleeps. The earlier macOS model experiment was not rerun.
+
+The adapter passes the timeout to its transport; it does not enforce a deadline or translate provider-specific exceptions. These tests verify forwarding and error propagation, not real network timeout behavior.
+
 ## Next step
 
-The next step is to continue the Python implementation inside `linux-lab-lima` and create a small testable model adapter with a bounded timeout and deterministic tests.
+The broader T1.1 Yandex task in issue #1 remains outstanding and should stay open. A real provider transport and verification of its timeout behavior remain outside this completed adapter-test step.
 
 Sign in with ChatGPT should remain a serious provider/authentication option, but I should not force the whole architecture around it before comparing the complexity with conventional model APIs.
 
