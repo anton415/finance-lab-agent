@@ -82,7 +82,7 @@ The adapter passes the timeout to its transport; it does not enforce a deadline.
 
 ## Next step
 
-The broader T1.1 Yandex task in issue #1 remains outstanding and should stay open. A real provider transport and verification of its timeout behavior remain outstanding.
+Update on 2026-10-06: a real Python-to-Yandex request now succeeds inside Lima. The transport, offline timeout/error checks, and observed result are recorded in the [Yandex follow-up](day2-yandex-model-call.md). Issue #1 remains open for acceptance; the earlier macOS experiment and its limits above describe the historical result.
 
 Sign in with ChatGPT should remain a serious provider/authentication option, but I should not force the whole architecture around it before comparing the complexity with conventional model APIs.
 
