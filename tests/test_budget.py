@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from finance_lab_agent import budget as budget_module
@@ -75,3 +77,60 @@ def test_invoke_get_budget_rejects_invalid_arguments_before_calling_budget(
 def test_invoke_get_budget_preserves_unavailable_month_error():
     with pytest.raises(ValueError, match="Synthetic budget is unavailable"):
         budget_module.invoke_get_budget({"month": "2026-11"})
+
+
+def test_execute_tool_call_returns_budget_from_json_arguments():
+    result = budget_module.execute_tool_call("get_budget", '{"month": "2026-10"}')
+
+    assert result == {
+        "month": "2026-10",
+        "currency": "RUB",
+        "allocations": {
+            "Housing": 50000,
+            "Food": 25000,
+            "Transport": 10000,
+        },
+    }
+
+
+@pytest.mark.parametrize("arguments_json", ['{"month": "2026-10"}', "not JSON"])
+def test_execute_tool_call_rejects_unknown_tool_before_parsing(
+    arguments_json, monkeypatch
+):
+    def unexpected_get_budget(month):
+        pytest.fail("get_budget must not run for an unsupported tool")
+
+    monkeypatch.setattr(budget_module, "get_budget", unexpected_get_budget)
+
+    with pytest.raises(ValueError, match="Unsupported tool"):
+        budget_module.execute_tool_call("delete_budget", arguments_json)
+
+
+@pytest.mark.parametrize(
+    ("arguments_json", "error_type", "message"),
+    [
+        (None, ValueError, "Tool arguments must be JSON text"),
+        ({"month": "2026-10"}, ValueError, "Tool arguments must be JSON text"),
+        (b'{"month": "2026-10"}', ValueError, "Tool arguments must be JSON text"),
+        ("not JSON", json.JSONDecodeError, None),
+        ("null", ValueError, "arguments must be a dictionary"),
+        ("[]", ValueError, "arguments must be a dictionary"),
+        ("{}", ValueError, "arguments must be a dictionary"),
+        ('{"month": 202610}', ValueError, "arguments must be a dictionary"),
+        (
+            '{"month": "2026-10", "extra": true}',
+            ValueError,
+            "arguments must be a dictionary",
+        ),
+    ],
+)
+def test_execute_tool_call_rejects_invalid_arguments_before_calling_budget(
+    arguments_json, error_type, message, monkeypatch
+):
+    def unexpected_get_budget(month):
+        pytest.fail("get_budget must not run for invalid tool arguments")
+
+    monkeypatch.setattr(budget_module, "get_budget", unexpected_get_budget)
+
+    with pytest.raises(error_type, match=message):
+        budget_module.execute_tool_call("get_budget", arguments_json)

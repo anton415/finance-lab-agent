@@ -66,3 +66,73 @@ def test_yandex_timeout_reaches_adapter(monkeypatch):
 
     assert isinstance(caught.value.__cause__, TimeoutError)
     assert isinstance(caught.value.__cause__.__cause__, httpx.ReadTimeout)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": "synthetic-call-1",
+                    "type": "function",
+                    "function": {
+                        "name": "get_budget",
+                        "arguments": '{"month": "2026-10"}',
+                    },
+                },
+            ],
+        },
+        {"role": "assistant", "content": "Please specify a month."},
+    ],
+)
+def test_budget_tool_request_preserves_complete_message(message, monkeypatch):
+    def handle(request):
+        assert request.method == "POST"
+        assert str(request.url) == "https://ai.api.cloud.yandex.net/v1/chat/completions"
+        assert request.headers["Authorization"] == "Api-Key synthetic-test-key"
+        assert request.headers["OpenAI-Project"] == "test-folder"
+        assert json.loads(request.content) == {
+            "model": "gpt://test-folder/yandexgpt-5.1",
+            "messages": [{"role": "user", "content": "Read my synthetic October budget."}],
+            "max_tokens": 128,
+            "temperature": 0,
+            "tools": [yandex.GET_BUDGET_TOOL],
+            "tool_choice": "auto",
+        }
+        assert request.extensions["timeout"] == {
+            "connect": 5.0, "read": 5.0, "write": 5.0, "pool": 5.0
+        }
+        return httpx.Response(200, json={"choices": [{"message": message}]})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr(yandex.httpx, "post", client.post)
+        result = yandex.request_budget_tool("Read my synthetic October budget.", 5.0)
+
+    assert result == message
+
+
+def test_budget_tool_request_rejects_http_error(monkeypatch):
+    def handle(request):
+        return httpx.Response(503, json={"error": "synthetic provider failure"})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr(yandex.httpx, "post", client.post)
+        with pytest.raises(httpx.HTTPStatusError) as caught:
+            yandex.request_budget_tool("Synthetic prompt", 5.0)
+
+    assert caught.value.response.status_code == 503
+
+
+def test_budget_tool_request_converts_timeout(monkeypatch):
+    def handle(request):
+        raise httpx.ReadTimeout("synthetic read timeout", request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr(yandex.httpx, "post", client.post)
+        with pytest.raises(TimeoutError, match="Yandex request timed out") as caught:
+            yandex.request_budget_tool("Synthetic prompt", 5.0)
+
+    assert isinstance(caught.value.__cause__, httpx.ReadTimeout)
