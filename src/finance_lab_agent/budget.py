@@ -11,3 +11,16 @@ def get_budget(month: str) -> dict:
         }
     else:
         raise ValueError("Synthetic budget is unavailable for this month")
+
+
+def invoke_get_budget(arguments: dict) -> dict:
+    if (
+        isinstance(arguments, dict)
+        and set(arguments) == {"month"}
+        and isinstance(arguments["month"], str)
+    ):
+        return get_budget(arguments["month"])
+    else:
+        raise ValueError(
+            "arguments must be a dictionary containing only a string 'month' field"
+        )
