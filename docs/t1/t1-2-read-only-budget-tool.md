@@ -83,8 +83,22 @@ the offline tests additionally verify that invalid arguments never invoke `get_b
 These were guided checks: Codex supplied the Python setup and exact commands.
 Anton correctly identified that the budget amounts come from `get_budget`.
 After clarification about JSON versus read-only behavior, he explained that saving to a
-file is a write operation even if the saved values are unchanged. Independent reconstruction
-of the invocation and the full contract explanation are still unverified.
+file is a write operation even if the saved values are unchanged. The follow-up invocation
+is recorded below; the full independent contract explanation remains pending.
+
+## Follow-up manual invocation
+
+For the next attempt, Codex supplied only the Python startup/import commands and the task:
+request October 2026 through `execute_tool_call`. Anton wrote the function call himself.
+
+His first call passed a Python dictionary instead of JSON text and raised
+`ValueError: Tool arguments must be JSON text`. He corrected the call within that attempt,
+without an intervening correction from Codex, and received the expected October budget.
+
+Codex verified both outcomes in the terminal. This demonstrates a self-composed and
+self-corrected function call after guided practice and provided terminal setup.
+Independent setup of the whole environment and the full contract explanation are not
+established by this check.
 
 ## Learning ownership and time
 
@@ -94,7 +108,8 @@ and runner when asked, and added the tests.
 
 - Planned: 15 minutes was proposed for the initial budget-function exercise; a total T1.2 estimate was not recorded.
 - Actual active time: approximately 2 hours, reported by Anton, excluding breaks.
-- Independent explanation and manual demonstration: pending.
+- Manual function invocation: composed and corrected by Anton with Python startup/import setup provided.
+- Full independent contract explanation: pending.
 
 The live experiment and actual-time record have evidence. Full T1.2 acceptance remains
-pending independent human demonstration; this note does not close the issue.
+pending the full independent contract explanation; this note does not close the issue.
