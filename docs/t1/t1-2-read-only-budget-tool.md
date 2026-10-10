@@ -84,7 +84,7 @@ These were guided checks: Codex supplied the Python setup and exact commands.
 Anton correctly identified that the budget amounts come from `get_budget`.
 After clarification about JSON versus read-only behavior, he explained that saving to a
 file is a write operation even if the saved values are unchanged. The follow-up invocation
-is recorded below; the full independent contract explanation remains pending.
+and the later contract explanation review are recorded below.
 
 ## Follow-up manual invocation
 
@@ -100,6 +100,21 @@ self-corrected function call after guided practice and provided terminal setup.
 Independent setup of the whole environment and the full contract explanation are not
 established by this check.
 
+## Contract explanation review — 2026-10-10
+
+Source revision: `a10d6ee9d7116c8625d19cea94bd11292fa5d0f2`; no implementation changes were needed for this review.
+
+Codex presented a future-account authorization scenario, reminded Anton that the current input permits only `month`, displayed the synthetic output, and asked why the implementation is read-only. Anton supplied these explanations:
+
+- When signed in as Anton, the backend may read only Anton's budget and must obtain identity from the authenticated login session, not the model's arguments.
+- An extra `user_id` field must cause rejection because it is outside the allowed input contract.
+- `month` is the requested budget month; `currency` identifies RUB as the amounts' currency; `allocations` contains the planned amount for each budget category.
+- `get_budget` only returns data and does not save or modify anything. The model cannot use it to change Food to 60,000 RUB because the tool has no write operation.
+
+These answers correctly explain the current contract and the future authorization boundary. The contract explanation check is complete. This was a question-based review following earlier teaching, not an independent end-to-end environment or failure-diagnosis exercise. The current implementation still uses a synthetic fixture and has no login system or database.
+
+The earlier self-composed and self-corrected manual invocation, plus the observed malformed-argument rejection, remain the practical evidence; no duplicate tool invocation or paid model request was performed for this explanation review.
+
 ## Learning ownership and time
 
 Anton wrote the initial budget function, input validator, tool description, and tool-call
@@ -109,7 +124,7 @@ and runner when asked, and added the tests.
 - Planned: 15 minutes was proposed for the initial budget-function exercise; a total T1.2 estimate was not recorded.
 - Actual active time: approximately 2 hours, reported by Anton, excluding breaks.
 - Manual function invocation: composed and corrected by Anton with Python startup/import setup provided.
-- Full independent contract explanation: pending.
+- Contract explanation: completed in the question-based review on 2026-10-10, with the review method and answers recorded above.
+- Additional contract review planned time: approximately 5 minutes. Actual active time: 5 minutes (reported by Anton); separate from the earlier 2-hour implementation record.
 
-The live experiment and actual-time record have evidence. Full T1.2 acceptance remains
-pending the full independent contract explanation; this note does not close the issue.
+The live experiment, manual invocation, argument-rejection checks, and contract explanation now have evidence. T1.2 is ready for final evidence and human acceptance review. The limits of the earlier guided setup remain as recorded; GitHub issue #2 remains open and was not changed by this documentation update.
