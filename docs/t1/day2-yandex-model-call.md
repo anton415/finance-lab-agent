@@ -85,5 +85,27 @@ Codex prepared the surrounding request settings and timeout translation, added t
 - Original Day 2 planned slot: approximately 1 h 15 min; no separate estimate was established for this follow-up.
 - Additional actual time for this Yandex follow-up: not recorded yet; requested from Anton. This is separate from the earlier 1 h 30 min ChatGPT experiment and the Linux exercises.
 - Token usage and monetary cost were not captured; no estimate is presented as observed cost.
-- Fresh-checkout setup and second-host execution were not tested.
+- At the time of this real-request session, fresh-checkout setup and second-host execution were not tested. The fresh-environment check below records later progress; second-host execution remains untested.
 - Issue #1 remains open; no GitHub issue or project state was changed. The earlier ChatGPT experiment remains historical evidence, not a second provider implementation in this code.
+
+## Fresh Python environment check — 2026-10-10
+
+- Source revision: `8528dcd684baad3b3a3313374553937bbe7c0590`.
+- Codex extracted only committed files with `git archive` into a temporary directory in the existing Lima VM. No previous virtual environment or `.env` file was copied.
+- Anton ran the documented setup and offline tests himself using the supplied commands:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+PYTHONPATH=src .venv/bin/python -m pytest -q
+```
+
+Observed result: dependency installation succeeded; **57 passed in 0.05s**.
+Codex read the app terminal, checked the installed versions, and confirmed that all copied project files still matched the source revision.
+The new environment used Python 3.12.3, HTTPX 0.28.1, and pytest 9.1.1.
+
+This verifies the documented Python setup and offline suite from committed source in a fresh virtual environment. It reused the existing VM, installed Python/venv support, and pip cache; it does not establish fresh-VM provisioning or second-computer reproduction. The test run made no live model request. Dependencies remain unpinned; the observed versions are not a lockfile.
+
+This was a guided setup check, not an independent assessment of the request path or tool contract. Issue #1 remains open.
+
+Planned time: approximately 5–10 minutes. Actual active time: 5 minutes (reported by Anton).
