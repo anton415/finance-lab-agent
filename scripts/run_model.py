@@ -8,7 +8,7 @@ from finance_lab_agent.yandex import yandex_transport
 def main():
     adapter = ModelAdapter(yandex_transport)
     prompt = (
-        "Synthetic budget in RUB: Housing 50000, Food 60000, Transport 10000. "
+        "Synthetic budget in RUB: Housing 50000, Food 60000, Transport 100000. "
         "Which category has the largest allocation? Answer in one sentence."
     )
 
