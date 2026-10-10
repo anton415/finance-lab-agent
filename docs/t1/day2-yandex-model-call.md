@@ -139,3 +139,76 @@ The response identifies the largest allocation in Anton's modified input. Elapse
 With guidance, Anton described the adapter as checking and forwarding inputs, identified `yandex_transport` as sending the request to Yandex, identified HTTPX as enforcing network timeouts, and explained that Python reads the exported API key through `os.environ`. He also correctly identified the injected fake transport as the function called in the fake example. These were guided explanations, and the setup-error recovery used supplied commands; this does not establish independent end-to-end diagnosis. Anton authored the prompt modification; Codex performed the file edit. Issue #1 remains open.
 
 No separate planned duration was established for this guided review and rerun. Actual active time: 15 minutes (reported by Anton), excluding the earlier 5-minute fresh-environment setup check.
+
+## Follow-up explanation checks and direct prompt edit — 2026-10-10
+
+Execution source: `e46ffee744661117654e54ec048908be61c520fd`, plus Anton's
+one-line prompt edit below. Its committed tree matches the merged baseline
+`81a86b24d94097e36c00a5b7a1a921fc7adf1445`.
+
+### Explanation checks
+
+With the source available for reference, Anton gave these correct explanations:
+
+- The API key is read from `os.environ["YANDEX_API_KEY"]`, placed in the
+  `Authorization` header with the `Api-Key` scheme, and used in a POST request
+  to `https://ai.api.cloud.yandex.net/v1/chat/completions`.
+- HTTP 503 is detected by `response.raise_for_status()`. The adapter's generic
+  exception handler converts the resulting `httpx.HTTPStatusError` into
+  `ModelError`; `from error` retains the original exception as the cause.
+- The timeout path is `httpx.ReadTimeout` → `TimeoutError` → `ModelTimeoutError`.
+- The adapter calls its injected transport: the test's `fake_transport` returns
+  a fixed local response, while `yandex_transport` sends the HTTP request.
+- HTTPX enforces individual network-operation timeouts. A value of `30.0`
+  does not guarantee a 30-second deadline for the entire call.
+
+The HTTP 503 explanation used incremental questions and a displayed `raise`
+statement. The other answers followed focused questions without a supplied
+answer in that attempt. These are source-referenced explanation checks, not
+an unaided end-to-end troubleshooting assessment.
+
+### Human edit and observed result
+
+The task was to change one synthetic amount so a different category would be
+largest. Anton chose Transport at 100,000 RUB, edited and saved an editing copy
+of `scripts/run_model.py` himself, and predicted Transport as the result.
+Codex verified that the only change was `Transport 10000` → `Transport 100000`
+and copied the exact saved file into the VM after checking the original hash.
+
+Anton reported that the app terminal was unavailable and explicitly asked
+Codex to run the documented command:
+
+```bash
+PYTHONPATH=src .venv/bin/python scripts/run_model.py
+```
+
+The first attempt exited 1 before an API call because `YANDEX_MODEL_URI` was
+missing. Neither required Yandex setting was present in that execution shell.
+Anton supplied his existing API key through a hidden local prompt; Codex
+restored the model setting and saved both settings in an owner-only VM file
+outside Git. No replacement key was created. After loading those settings into
+the process environment, Codex reran the command once and observed:
+
+```text
+Model: yandexgpt-5.1
+The category with the largest allocation is Transport.
+Elapsed: 0.88 seconds
+Exit status: 0
+```
+
+The result matches Anton's chosen input and prediction. Codex checked Python
+syntax and the whitespace diff and updated the README example. The full test
+suite was not rerun for this prompt-only change. The read-only budget fixture
+remains unchanged. No secrets, private identifiers, or raw terminal logs are
+included in this record; token usage and cost were not captured.
+
+### Time and acceptance
+
+- Planned: approximately 5 minutes for the modification and rerun.
+- Actual: 30 active minutes, reported by Anton, including settings recovery and
+  excluding breaks and waiting.
+- The request-path explanation checks and human-chosen file modification have
+  evidence. Configuration recovery, file transfer, and command execution were
+  assisted; the live rerun must not be described as independently performed by Anton.
+- T1.1 is ready for final evidence and human acceptance review with those limits
+  explicit. Issue #1 remains open; this note does not change its GitHub state.

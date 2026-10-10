@@ -49,7 +49,7 @@ This sends one real request, which can consume your provider quota or balance:
 PYTHONPATH=src .venv/bin/python scripts/run_model.py
 ```
 
-The input is Housing 50,000 RUB, Food 60,000 RUB, and Transport 10,000 RUB. The expected largest category is Food; exact wording and elapsed time can vary. The request uses `max_tokens=128` and `temperature=0`.
+The input is Housing 50,000 RUB, Food 60,000 RUB, and Transport 100,000 RUB. The expected largest category is Transport; exact wording and elapsed time can vary. The request uses `max_tokens=128` and `temperature=0`.
 
 The script passes `30.0` to HTTPX for its connect/read/write/pool timeout settings. This is not a total wall-clock deadline: HTTPX read/write limits apply while waiting for individual chunks. See [HTTPX timeouts](https://www.python-httpx.org/advanced/timeouts/).
 
