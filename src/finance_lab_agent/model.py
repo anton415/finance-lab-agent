@@ -23,4 +23,3 @@ class ModelAdapter:
 			raise
 		except Exception as error:
 			raise ModelError(str(error)) from error
-
