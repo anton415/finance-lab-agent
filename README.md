@@ -49,9 +49,43 @@ This sends one real request, which can consume your provider quota or balance:
 PYTHONPATH=src .venv/bin/python scripts/run_model.py
 ```
 
-The input is Housing 50,000 RUB, Food 25,000 RUB, and Transport 10,000 RUB. The expected largest category is Housing; exact wording and elapsed time can vary. The request uses `max_tokens=128` and `temperature=0`.
+The input is Housing 50,000 RUB, Food 60,000 RUB, and Transport 10,000 RUB. The expected largest category is Food; exact wording and elapsed time can vary. The request uses `max_tokens=128` and `temperature=0`.
 
 The script passes `30.0` to HTTPX for its connect/read/write/pool timeout settings. This is not a total wall-clock deadline: HTTPX read/write limits apply while waiting for individual chunks. See [HTTPX timeouts](https://www.python-httpx.org/advanced/timeouts/).
+
+## Read-only budget tool experiment
+
+The tool input is a JSON object with exactly one required string field, for example
+`{"month": "2026-10"}`. Only the synthetic October 2026 fixture is available.
+
+The tool result has exactly these fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `month` | string | Requested fixture month, `2026-10`. |
+| `currency` | string | `RUB`. |
+| `allocations` | object | Category names mapped to integer RUB amounts: Housing 50000, Food 25000, Transport 10000. |
+
+Use the same VM terminal and environment settings as the real-request setup above:
+
+```bash
+PYTHONPATH=src .venv/bin/python scripts/run_budget_tool.py
+```
+
+This makes one real model request with the budget tool description. It executes at
+most one validated `get_budget` call locally and prints the synthetic result.
+The model prompt contains the requested month, not the allocation amounts.
+The run ends after the local result; it does not send a second model request.
+There are no retries, writes, or database access.
+
+Exit status `0` means a validated tool call succeeded; `2` means the model returned
+no tool call; `1` means a request, response, or validation failure. A text-only
+response is reported without executing the budget function. HTTP failures print
+the status code without credentials or the provider response body.
+
+The runner is tested offline with fake HTTP responses. A live YandexGPT 5.1 request
+on 2026-10-07 returned a budget tool call, which the runner validated and executed locally. See the
+[T1.2 evidence](docs/t1/t1-2-read-only-budget-tool.md) for the observed result and remaining learning checks.
 
 ## Request path and errors
 

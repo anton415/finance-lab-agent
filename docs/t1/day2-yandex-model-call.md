@@ -85,5 +85,57 @@ Codex prepared the surrounding request settings and timeout translation, added t
 - Original Day 2 planned slot: approximately 1 h 15 min; no separate estimate was established for this follow-up.
 - Additional actual time for this Yandex follow-up: not recorded yet; requested from Anton. This is separate from the earlier 1 h 30 min ChatGPT experiment and the Linux exercises.
 - Token usage and monetary cost were not captured; no estimate is presented as observed cost.
-- Fresh-checkout setup and second-host execution were not tested.
+- At the time of this real-request session, fresh-checkout setup and second-host execution were not tested. The fresh-environment check below records later progress; second-host execution remains untested.
 - Issue #1 remains open; no GitHub issue or project state was changed. The earlier ChatGPT experiment remains historical evidence, not a second provider implementation in this code.
+
+## Fresh Python environment check — 2026-10-10
+
+- Source revision: `8528dcd684baad3b3a3313374553937bbe7c0590`.
+- Codex extracted only committed files with `git archive` into a temporary directory in the existing Lima VM. No previous virtual environment or `.env` file was copied.
+- Anton ran the documented setup and offline tests himself using the supplied commands:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+PYTHONPATH=src .venv/bin/python -m pytest -q
+```
+
+Observed result: dependency installation succeeded; **57 passed in 0.05s**.
+Codex read the app terminal, checked the installed versions, and confirmed that all copied project files still matched the source revision.
+The new environment used Python 3.12.3, HTTPX 0.28.1, and pytest 9.1.1.
+
+This verifies the documented Python setup and offline suite from committed source in a fresh virtual environment. It reused the existing VM, installed Python/venv support, and pip cache; it does not establish fresh-VM provisioning or second-computer reproduction. The test run made no live model request. Dependencies remain unpinned; the observed versions are not a lockfile.
+
+This was a guided setup check, not an independent assessment of the request path or tool contract. Issue #1 remains open.
+
+Planned time: approximately 5–10 minutes. Actual active time: 5 minutes (reported by Anton).
+
+## Human-authored prompt change and live rerun — 2026-10-10
+
+Base revision: `f4d182845e55c5205e223859f7757b0a94366a44`, with the accompanying prompt and README changes.
+
+After a guided request-path explanation, Anton wrote this modified synthetic prompt himself:
+
+> Synthetic budget in RUB: Housing 50000, Food 60000, Transport 10000. Which category has the largest allocation? Answer in one sentence.
+
+Codex applied Anton's exact text to `scripts/run_model.py`, updated the matching README example, and checked Python syntax. Anton ran the script in the existing VM:
+
+```bash
+PYTHONPATH=src .venv/bin/python scripts/run_model.py
+```
+
+The first attempt stopped at a missing `YANDEX_MODEL_URI` environment setting. After restoring it, the next attempt stopped at a missing `YANDEX_API_KEY`, which the adapter wrapped as `ModelError`. Both failures occurred before an HTTP request. With supplied instructions, Anton restored the model setting and exported the API key through a hidden terminal prompt, then reran the script.
+
+Codex read this successful result directly from the app terminal:
+
+```text
+Model: yandexgpt-5.1
+The category with the largest allocation is Food, with 60000 RUB.
+Elapsed: 1.26 seconds
+```
+
+The response identifies the largest allocation in Anton's modified input. Elapsed time covers the adapter call; no separate numeric exit status, token usage, or cost was captured. The synthetic budget tool fixture was not changed. No credential values, private folder IDs, or raw terminal logs are included here.
+
+With guidance, Anton described the adapter as checking and forwarding inputs, identified `yandex_transport` as sending the request to Yandex, identified HTTPX as enforcing network timeouts, and explained that Python reads the exported API key through `os.environ`. He also correctly identified the injected fake transport as the function called in the fake example. These were guided explanations, and the setup-error recovery used supplied commands; this does not establish independent end-to-end diagnosis. Anton authored the prompt modification; Codex performed the file edit. Issue #1 remains open.
+
+No separate planned duration was established for this guided review and rerun. Actual active time: 15 minutes (reported by Anton), excluding the earlier 5-minute fresh-environment setup check.
